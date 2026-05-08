@@ -1,0 +1,4 @@
+Method  GET 
+Path  /test.php?par=qwerty
+Host  127.0.0.1
+

@@ -1,0 +1,5 @@
+Method  POST 
+Path  /test.php
+Host  127.0.0.1
+
+PostData  param=qwerty

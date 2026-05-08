@@ -1,0 +1,4 @@
+Method  GET 
+Path  /scgi_test?par=qwerty
+Host  127.0.0.1
+
