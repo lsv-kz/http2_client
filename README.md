@@ -32,9 +32,14 @@ Timeout                 ? #  second
 TimeoutPoll             ? #  millisecond  
 UserAgent               anonymous  
 
-MinWindowSize           ? #  octets 
+MinWindowSize           ? #  octets  
 MaxWindowSize           ? #  octets  
 
-SettingsHeaderTableSize  ? # octets, Dynamic Table Size: -1 param SETTINGS_HEADER_TABLE_SIZE not including to frame SETTINGS  
-InitialWindowSize        ? # octets, -1 param SETTINGS_INITIAL_WINDOW_SIZE not including to frame SETTINGS  
-SettingsMaxFrameSize     ? # octets, -1 param SETTINGS_MAX_FRAME_SIZE not including to frame SETTINGS  
+# SETTINGS_HEADER_TABLE_SIZE, if -1 then not included in frame SETTINGS  
+SettingsHeaderTableSize  ? # octets  
+
+# SETTINGS_INITIAL_WINDOW_SIZE, if -1 then not included in frame SETTINGS  
+InitialWindowSize        ? # octets  
+
+# SETTINGS_MAX_FRAME_SIZE, if -1 then not included in frame SETTINGS  
+SettingsMaxFrameSize     ? # octets  
