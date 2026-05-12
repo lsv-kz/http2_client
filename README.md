@@ -20,10 +20,10 @@ cd http2_client/src/
 make clean  
 make  
 
-Edit configuration file: config.txt  
+Edit configuration file config.txt  
 ./http2_client  
 
-### Configuration file:
+### Configuration file "config.txt":
 RequestsPath            ../requests  
 LogPath                 ../logs  
 
@@ -35,11 +35,11 @@ UserAgent               anonymous
 MinWindowSize           ? #  octets  
 MaxWindowSize           ? #  octets  
 
-# SETTINGS_HEADER_TABLE_SIZE, if -1 then not included in frame SETTINGS  
+\# SETTINGS_HEADER_TABLE_SIZE, if -1 then not included in frame SETTINGS  
 SettingsHeaderTableSize  ? # octets  
 
-# SETTINGS_INITIAL_WINDOW_SIZE, if -1 then not included in frame SETTINGS  
+\# SETTINGS_INITIAL_WINDOW_SIZE, if -1 then not included in frame SETTINGS  
 InitialWindowSize        ? # octets  
 
-# SETTINGS_MAX_FRAME_SIZE, if -1 then not included in frame SETTINGS  
+\# SETTINGS_MAX_FRAME_SIZE, if -1 then not included in frame SETTINGS  
 SettingsMaxFrameSize     ? # octets  
