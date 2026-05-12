@@ -106,11 +106,11 @@ struct Config
 
     long SettingsHeaderTableSize;  // 1
     long MaxConcurrentStreams;     // 3
-    long InitialWindowsSize;       // 4
+    long InitialWindowSize;       // 4
     long SettingsMaxFrameSize;     // 5
 
-    long MinWindowsSize;
-    long MaxWindowsSize;
+    long MinWindowSize;
+    long MaxWindowSize;
 
     int Timeout;
     int TimeoutPoll;
@@ -123,7 +123,7 @@ struct Config
     void init()
     {
         MaxConcurrentStreams = 128;
-        InitialWindowsSize = -1;
+        InitialWindowSize = -1;
         Timeout = 30;
         TimeoutPoll = 10;
         snprintf(UserAgent, sizeof(UserAgent), "anonymous");
@@ -143,15 +143,15 @@ struct Stream
 
     ByteArray headers;
     ByteArray frame_win_update;
-    long serv_stream_windows_size;
+    long serv_stream_window_size;
     long long recv_bytes;
 
     Stream()
     {
-        if (conf->InitialWindowsSize >= 0)
-            serv_stream_windows_size = conf->InitialWindowsSize;
+        if (conf->InitialWindowSize >= 0)
+            serv_stream_window_size = conf->InitialWindowSize;
         else
-            serv_stream_windows_size = 65535;
+            serv_stream_window_size = 65535;
         id = 0;
         recv_bytes = 0;
         num_conn = 0;
@@ -159,7 +159,7 @@ struct Stream
 
     ~Stream()
     {
-        //fprintf(stderr, "[%lu/%d]<~~~> serv_stream_windows_size=%ld\n", num_conn, id, serv_stream_windows_size);
+        //fprintf(stderr, "[%lu/%d]<~~~> serv_stream_window_size=%ld\n", num_conn, id, serv_stream_window_size);
     }
 };
 //======================================================================
@@ -302,7 +302,7 @@ struct Connect
     bool print_entity;
     bool print_all_headers;
 
-    long serv_connect_windows_size;
+    long serv_connect_window_size;
 
     long long  read_bytes;
 
@@ -322,7 +322,7 @@ struct Connect
         ssl_err = 0;
         num_work_stream = 0;
 
-        serv_connect_windows_size = 65535;
+        serv_connect_window_size = 65535;
 
         sock_timer = 0;
         next = NULL;
@@ -339,7 +339,7 @@ struct Connect
 
     ~Connect()
     {
-        //fprintf(stderr, "[%lu]<~> serv_connect_windows_size=%ld\n", num_conn, serv_connect_windows_size);
+        //fprintf(stderr, "[%lu]<~> serv_connect_window_size=%ld\n", num_conn, serv_connect_window_size);
         if (req_array)
         {
             for (int i = 0; i < max_req; ++i)
@@ -347,7 +347,7 @@ struct Connect
                 Stream *r = req_array[i];
                 if (r)
                 {
-                    //fprintf(stderr, "[%lu/%d]<~~~> serv_stream_windows_size=%ld\n", num_conn, r->id, r->serv_stream_windows_size);
+                    //fprintf(stderr, "[%lu/%d]<~~~> serv_stream_window_size=%ld\n", num_conn, r->id, r->serv_stream_window_size);
                     delete r;
                 }
             }
@@ -431,12 +431,12 @@ struct Connect
         else
             set_bytes(s, 128, frame_size - 4);
 
-        if (conf->InitialWindowsSize >= 0)
+        if (conf->InitialWindowSize >= 0)
         {
             // SETTINGS_INITIAL_WINDOW_SIZE (0x4)
             memcpy(s + frame_size, "\x00\x04\x00\x00\x00\x00", 6);
             frame_size += 6;
-            set_bytes(s, conf->InitialWindowsSize, frame_size - 4);
+            set_bytes(s, conf->InitialWindowSize, frame_size - 4);
         }
 
         if (conf->SettingsMaxFrameSize > 0)

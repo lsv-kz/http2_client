@@ -574,7 +574,7 @@ int set_frame_window_update(Stream *req, unsigned int size)
     }
 
     int id = req->id;
-    req->serv_stream_windows_size += size;
+    req->serv_stream_window_size += size;
     req->frame_win_update.cpy("\x00\x00\x04\x08\x00\x00\x00\x00\x00"  // 0-8
                                "\x00\x00\x00\x00", 13);               // 9-12
     set_bytes(&req->frame_win_update, id, 5);
@@ -597,7 +597,7 @@ int set_frame_window_update(Connect *con, unsigned int size) // 1 ... 2147483647
         return -1;
     }
 
-    con->serv_connect_windows_size += size;
+    con->serv_connect_window_size += size;
     con->frame_win_update.cpy("\x00\x00\x04\x08\x00\x00\x00\x00\x00"  // 0-8
                                "\x00\x00\x00\x00", 13);               // 9-12
     set_bytes(&con->frame_win_update, size, 9);

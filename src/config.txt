@@ -1,16 +1,13 @@
-RequestsPath ../requests
-LogPath  ../logs
+RequestsPath              ../requests
+LogPath                   ../logs
 
-MaxConcurrentStreams    128
-Timeout       15 #95   #  second 
-TimeoutPoll   10   #  millisecond
-UserAgent anonymous
-#UserAgent У Вас продается славянский шкаф?
+MaxConcurrentStreams      128
+Timeout                   65   #  second 
+TimeoutPoll               10   #  millisecond
+UserAgent                 anonymous
 
-SettingsHeaderTableSize    -1
-InitialWindowsSize         -1
-SettingsMaxFrameSize       -1
-MinWindowsSize             65535
-MaxWindowsSize             12582912
-
-# 2048 8192 16384 65535 131072; 131070 - 65535 = 65535; 131072/2=65536; 12582912
+SettingsHeaderTableSize   -1
+InitialWindowSize         -1
+SettingsMaxFrameSize      -1
+MinWindowSize             65535
+MaxWindowSize             12582912

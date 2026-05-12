@@ -139,9 +139,9 @@ int read_conf_file()
             printf("SettingsHeaderTableSize: %ld\n", c.SettingsHeaderTableSize);
             continue;
         }
-        else if (sscanf(p1, " InitialWindowsSize %ld", &c.InitialWindowsSize) == 1)
+        else if (sscanf(p1, " InitialWindowSize %ld", &c.InitialWindowSize) == 1)
         {
-            printf("InitialWindowsSize: %ld\n", c.InitialWindowsSize);
+            printf("InitialWindowSize: %ld\n", c.InitialWindowSize);
             continue;
         }
         else if (sscanf(p1, " SettingsMaxFrameSize %ld", &c.SettingsMaxFrameSize) == 1)
@@ -149,14 +149,14 @@ int read_conf_file()
             printf("SettingsMaxFrameSize: %ld\n", c.SettingsMaxFrameSize);
             continue;
         }
-        else if (sscanf(p1, " MaxWindowsSize %ld", &c.MaxWindowsSize) == 1)
+        else if (sscanf(p1, " MaxWindowSize %ld", &c.MaxWindowSize) == 1)
         {
-            printf("MaxWindowsSize: %ld\n", c.MaxWindowsSize);
+            printf("MaxWindowSize: %ld\n", c.MaxWindowSize);
             continue;
         }
-        else if (sscanf(p1, " MinWindowsSize %ld", &c.MinWindowsSize) == 1)
+        else if (sscanf(p1, " MinWindowSize %ld", &c.MinWindowSize) == 1)
         {
-            printf("MinWindowsSize: %ld\n", c.MinWindowsSize);
+            printf("MinWindowSize: %ld\n", c.MinWindowSize);
             continue;
         }
         else if (sscanf(p1, " Timeout %d", &c.Timeout) == 1)
@@ -184,9 +184,9 @@ int read_conf_file()
 
     fclose(f);
 
-    if ((conf->MaxWindowsSize/conf->MinWindowsSize) < 2)
+    if ((conf->MaxWindowSize/conf->MinWindowSize) < 2)
     {
-        printf("!!! Error MaxWindowsSize/MinWindowsSize < 2\n");
+        printf("!!! Error MaxWindowSize/MinWindowSize < 2\n");
         return -1;
     }
 

@@ -16,7 +16,7 @@ const char preface_message[] = "PRI * HTTP/2.0\r\n\r\nSM\r\n\r\n";
 
 int recv_frame(Connect *con);
 
-int max_work_str;
+int max_work_streams;
 //======================================================================
 void del_from_list(Connect *conn)
 {
@@ -114,7 +114,7 @@ int http2_connection(Connect *con)
             con->operation = SEND_SETTINGS;
             con->events = POLLOUT;
             con->sock_timer = 0;
-            set_frame_window_update(con, conf->MaxWindowsSize);
+            set_frame_window_update(con, conf->MaxWindowSize);
         }
         else
         {
@@ -242,13 +242,13 @@ int recv_frame(Connect *con)
         {
             con->read_bytes += ret;
             recv_all_bytes += ret;
-            con->serv_connect_windows_size -= ret;
+            con->serv_connect_window_size -= ret;
 
             Stream *req = con->req_array[con->frame_id/2];
             if (req)
             {
                 req->recv_bytes += ret;
-                req->serv_stream_windows_size -= ret;
+                req->serv_stream_window_size -= ret;
             }
             else
             {
@@ -532,7 +532,7 @@ int send_frame_headers(Connect *c)
         Stream *r = c->req_array[c->index_req];
         if (r)
         {
-            set_frame_window_update(r, conf->MaxWindowsSize);
+            set_frame_window_update(r, conf->MaxWindowSize);
             int ret = send_frame_window_update(c, r);
             if (ret < 0)
             {
@@ -554,8 +554,8 @@ int send_frame_headers(Connect *c)
             c->headers.init();
         }
 
-        if (max_work_str < c->num_work_stream)
-            max_work_str = c->num_work_stream;
+        if (max_work_streams < c->num_work_stream)
+            max_work_streams = c->num_work_stream;
     }
 
     c->index_req = 0;
@@ -635,13 +635,13 @@ int set_window_update(Connect *c)
         Stream *r = c->req_array[i];
         if (r)
         {
-            if (r->serv_stream_windows_size < conf->MinWindowsSize)
+            if (r->serv_stream_window_size < conf->MinWindowSize)
             {
-                int ret = set_frame_window_update(r, conf->MaxWindowsSize);
+                int ret = set_frame_window_update(r, conf->MaxWindowSize);
                 if (ret < 0)
                 {
-                    fprintf(stderr, "[%lu]<%s:%d> !!! MaxWindowsSize=%ld, r->serv_stream_windows_size=%ld\n", c->num_conn, __func__, __LINE__, 
-                                    conf->MaxWindowsSize , r->serv_stream_windows_size);
+                    fprintf(stderr, "[%lu]<%s:%d> !!! MaxWindowSize=%ld, r->serv_stream_window_size=%ld\n", c->num_conn, __func__, __LINE__, 
+                                    conf->MaxWindowSize , r->serv_stream_window_size);
                 }
             }
             if (r->frame_win_update.size())
@@ -678,7 +678,7 @@ void worker(Connect *c)
                 Stream *r = c->req_array[c->index_req];
                 if (r)
                 {
-                    set_frame_window_update(r, conf->MaxWindowsSize);
+                    set_frame_window_update(r, conf->MaxWindowSize);
                     int ret = send_frame_window_update(c, r);
                     if (ret < 0)
                     {
@@ -771,7 +771,7 @@ void loop()
     {
         if (start_list == NULL)
         {
-            fprintf(stdout, "<%s:%d> --- END recv from server %lld bytes [%d]---\n", __func__, __LINE__, recv_all_bytes, max_work_str);
+            fprintf(stdout, "<%s:%d> --- END recv from server %lld bytes [%d]---\n", __func__, __LINE__, recv_all_bytes, max_work_streams);
             break;
         }
 
@@ -841,11 +841,11 @@ void loop()
                         poll_fd[i].events |= POLLOUT;
                     }
 
-                    if ((conn->serv_connect_windows_size < conf->MinWindowsSize) && (conn->send_goaway == false))
+                    if ((conn->serv_connect_window_size < conf->MinWindowSize) && (conn->send_goaway == false))
                     {
                         if (conn->frame_win_update.size() == 0)
                         {
-                            set_frame_window_update(conn, conf->MaxWindowsSize);
+                            set_frame_window_update(conn, conf->MaxWindowSize);
                         }
                         poll_fd[i].events = POLLOUT;
                     }
@@ -855,7 +855,7 @@ void loop()
                         Stream *r = conn->req_array[j];
                         if (r)
                         {
-                            if (r->serv_stream_windows_size < conf->MinWindowsSize)
+                            if (r->serv_stream_window_size < conf->MinWindowSize)
                             {
                                 poll_fd[i].events = POLLOUT;
                             }
@@ -924,7 +924,7 @@ void loop()
     }
 }
 //======================================================================
-void delete_conn()
+void delete_connect()
 {
     if (poll_fd)
         delete [] poll_fd;
@@ -953,7 +953,7 @@ int create_connections()
     start_list = end_list = NULL;
     poll_fd = NULL;
     true_connect = 0;
-    max_work_str = 0;
+    max_work_streams = 0;
 fprintf(stdout, "<%s:%d> ---------num_connections=%d--------\n", __func__, __LINE__, conf->num_connections);
     Connect *con;
 
@@ -970,7 +970,7 @@ fprintf(stdout, "<%s:%d> ---------num_connections=%d--------\n", __func__, __LIN
         con = create_connect();
         if (!con)
         {
-            delete_conn();
+            delete_connect();
             return 0;
         }
 
@@ -981,7 +981,7 @@ fprintf(stdout, "<%s:%d> ---------num_connections=%d--------\n", __func__, __LIN
         if (con->servSocket < 0)
         {
             fprintf(stderr, "[%d]<%s:%d> Error create_sock()\n", i, __func__, __LINE__);
-            delete_conn();
+            delete_connect();
             return 0;
         }
 
@@ -989,31 +989,28 @@ fprintf(stdout, "<%s:%d> ---------num_connections=%d--------\n", __func__, __LIN
         if (!con->ssl)
         {
             fprintf(stderr, "[%d]<%s:%d> Error SSL_new()\n", i, __func__, __LINE__);
-            delete_conn();
+            delete_connect();
             return 0;
         }
 
-        if (strspn(Host, "0123456789.") != strlen(Host))
+        if (SSL_set_tlsext_host_name(con->ssl, Host) != 1)
         {
-            if (SSL_set_tlsext_host_name(con->ssl, Host) != 1)
-            {
-                fprintf(stderr, "[%d]<%s:%d> Error SSL_set_tlsext_host_name(%s)\n", i, __func__, __LINE__, Host);
-                ERR_print_errors_fp(stderr);
-                //exit(1);
-            }
+            printf("[%d]<%s:%d> Error SSL_set_tlsext_host_name(%s)\n", i, __func__, __LINE__, Host);
+            fprintf(stderr, "[%d]<%s:%d> Error SSL_set_tlsext_host_name(%s)\n", i, __func__, __LINE__, Host);
+            ERR_print_errors_fp(stderr);
         }
 
         if (SSL_set_alpn_protos(con->ssl, alpn, sizeof(alpn)))
         {
             fprintf(stderr, "Error SSL_CTX_set_alpn_protos\n");
-            delete_conn();
+            delete_connect();
             return 0;
         }
 
         if (!SSL_set_fd(con->ssl, con->servSocket))
         {
             fprintf(stderr, "[%d]<%s:%d> Error SSL_set_fd()\n", i, __func__, __LINE__);
-            delete_conn();
+            delete_connect();
             return 0;
         }
 
@@ -1039,6 +1036,6 @@ fprintf(stdout, "<%s:%d> ---------num_connections=%d--------\n", __func__, __LIN
 
     loop();
     delete [] conn_array;
-    delete_conn();
+    delete_connect();
     return true_connect;
 }
