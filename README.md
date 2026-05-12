@@ -24,22 +24,22 @@ Edit configuration file config.txt
 ./http2_client  
 
 ### Configuration file "config.txt":
-RequestsPath            ../requests  
-LogPath                 ../logs  
+<pre>RequestsPath            ../requests</pre>  
+<pre>LogPath                 ../logs</pre>  
 
-MaxConcurrentStreams    128  
-Timeout                 ? #  second  
-TimeoutPoll             ? #  millisecond  
-UserAgent               anonymous  
+<pre>MaxConcurrentStreams    128</pre>  
+<pre>Timeout                 ? #  second</pre>  
+<pre>TimeoutPoll             ? #  millisecond</pre>  
+<pre>UserAgent               anonymous</pre>  
 
-MinWindowSize           ? #  octets  
-MaxWindowSize           ? #  octets  
+<pre>MinWindowSize           ? #  octets</pre>  
+<pre>MaxWindowSize           ? #  octets</pre>  
 
 \# SETTINGS_HEADER_TABLE_SIZE, if -1 then not included in frame SETTINGS  
-SettingsHeaderTableSize  ? # octets  
+<pre>SettingsHeaderTableSize  ? # octets</pre>  
 
 \# SETTINGS_INITIAL_WINDOW_SIZE, if -1 then not included in frame SETTINGS  
-InitialWindowSize        ? # octets  
+<pre>InitialWindowSize        ? # octets</pre>  
 
 \# SETTINGS_MAX_FRAME_SIZE, if -1 then not included in frame SETTINGS  
-SettingsMaxFrameSize     ? # octets  
+<pre>SettingsMaxFrameSize     ? # octets</pre>  
