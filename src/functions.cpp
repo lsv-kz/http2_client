@@ -372,27 +372,25 @@ int read_req_file(const char *path)
     return n;
 }
 //======================================================================
-void set_size(ByteArray *ba, int size)
+void set_frame_size(ByteArray *ba, int size)
 {
-    int shift = 16;
-    int i = 0;
-    for ( ; shift >= 0; )
+    int i = 2;
+    ba->set_byte(size, i--);
+    while (i >= 0)
     {
-        ba->set_byte(size>>shift, i);
-        ++i;
-        shift -= 8;
+        size >>= 8;
+        ba->set_byte(size, i--);
     }
 }
 //======================================================================
-void set_id(ByteArray *ba, int d)
+void set_stream_id(ByteArray *ba, int id)
 {
-    int shift = 24;
-    int i = 5;
-    for ( ; shift >= 0; )
+    int i = 8;
+    id &= 0x7fffffff;
+    ba->set_byte(id, i--);
+    while (i >= 5)
     {
-        ba->set_byte(d>>shift, i);
-        ++i;
-        shift -= 8;
+        ba->set_byte(id >>= 8, i--);
     }
 }
 //======================================================================
@@ -452,9 +450,9 @@ void set_frame_headers(Connect *c)
         c->headers.set_byte(5, 4);
     else if (!strcmp(Method, "POST"))
         c->headers.set_byte(4, 4);
-    int len = c->headers.size() - 9;
-    set_size(&c->headers, len);
-    set_id(&c->headers, c->stream_id);
+    int size = c->headers.size() - 9;
+    set_frame_size(&c->headers, size);
+    set_stream_id(&c->headers, c->stream_id);
 }
 //======================================================================
 void add_header(Connect *conn, int ind)
@@ -463,7 +461,7 @@ void add_header(Connect *conn, int ind)
     s[0] = (ind | 0x80);
     conn->headers.cat(s, 1);
     int len = conn->headers.size() - 9;
-    set_size(&conn->headers, len);
+    set_frame_size(&conn->headers, len);
 }
 //======================================================================
 /*void add_header(Connect *conn, int ind, const char *val)
@@ -544,15 +542,15 @@ void add_header(Connect *conn, const char *name, const char *val)
 
     conn->headers.cat(ba.ptr(), ba.size());
     int len = conn->headers.size() - 9;
-    set_size(&conn->headers, len);
+    set_frame_size(&conn->headers, len);
 }
 //======================================================================
 void set_frame_data(Connect *conn, const char *data, int len, int flag)
 {
     conn->data.cpy("\0\0\0\0\0\0\0\0\0", 9);
-    set_size(&conn->data, len);
+    set_frame_size(&conn->data, len);
     conn->data.set_byte(flag, 4);
-    set_id(&conn->data, conn->stream_id);
+    set_stream_id(&conn->data, conn->stream_id);
 
     conn->data.cat(data, len);
 }

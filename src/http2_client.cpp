@@ -129,34 +129,34 @@ int read_conf_file()
             printf("LogPath: %s\n", c.LogPath.c_str());
             continue;
         }
-        else if (sscanf(p1, " MaxConcurrentStreams %ld", &c.MaxConcurrentStreams) == 1)
+        else if (sscanf(p1, " MaxConcurrentStreams %d", &c.MaxConcurrentStreams) == 1)
         {
-            printf("MaxConcurrentStreams: %ld\n", c.MaxConcurrentStreams);
+            printf("MaxConcurrentStreams: %d\n", c.MaxConcurrentStreams);
             continue;
         }
-        else if (sscanf(p1, " SettingsHeaderTableSize %ld", &c.SettingsHeaderTableSize) == 1)
+        else if (sscanf(p1, " SettingsHeaderTableSize %d", &c.SettingsHeaderTableSize) == 1)
         {
-            printf("SettingsHeaderTableSize: %ld\n", c.SettingsHeaderTableSize);
+            printf("SettingsHeaderTableSize: %d\n", c.SettingsHeaderTableSize);
             continue;
         }
-        else if (sscanf(p1, " InitialWindowSize %ld", &c.InitialWindowSize) == 1)
+        else if (sscanf(p1, " InitialWindowSize %d", &c.InitialWindowSize) == 1)
         {
-            printf("InitialWindowSize: %ld\n", c.InitialWindowSize);
+            printf("InitialWindowSize: %d\n", c.InitialWindowSize);
             continue;
         }
-        else if (sscanf(p1, " SettingsMaxFrameSize %ld", &c.SettingsMaxFrameSize) == 1)
+        else if (sscanf(p1, " SettingsMaxFrameSize %d", &c.SettingsMaxFrameSize) == 1)
         {
-            printf("SettingsMaxFrameSize: %ld\n", c.SettingsMaxFrameSize);
+            printf("SettingsMaxFrameSize: %d\n", c.SettingsMaxFrameSize);
             continue;
         }
-        else if (sscanf(p1, " MaxWindowSize %ld", &c.MaxWindowSize) == 1)
+        else if (sscanf(p1, " MaxWindowSize %d", &c.MaxWindowSize) == 1)
         {
-            printf("MaxWindowSize: %ld\n", c.MaxWindowSize);
+            printf("MaxWindowSize: %d\n", c.MaxWindowSize);
             continue;
         }
-        else if (sscanf(p1, " MinWindowSize %ld", &c.MinWindowSize) == 1)
+        else if (sscanf(p1, " MinWindowSize %d", &c.MinWindowSize) == 1)
         {
-            printf("MinWindowSize: %ld\n", c.MinWindowSize);
+            printf("MinWindowSize: %d\n", c.MinWindowSize);
             continue;
         }
         else if (sscanf(p1, " Timeout %d", &c.Timeout) == 1)

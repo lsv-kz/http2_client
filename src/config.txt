@@ -2,7 +2,7 @@ RequestsPath              ../requests
 LogPath                   ../logs
 
 MaxConcurrentStreams      128
-Timeout                   65   #  second 
+Timeout                   95   #  second 
 TimeoutPoll               10   #  millisecond
 UserAgent                 anonymous
 

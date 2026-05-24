@@ -101,16 +101,13 @@ struct Config
     int num_connections;
     int num_req;
 
-    std::string RequestsPath;
-    std::string LogPath;
+    int SettingsHeaderTableSize;  // 1
+    int MaxConcurrentStreams;     // 3
+    int InitialWindowSize;        // 4
+    int SettingsMaxFrameSize;     // 5
 
-    long SettingsHeaderTableSize;  // 1
-    long MaxConcurrentStreams;     // 3
-    long InitialWindowSize;       // 4
-    long SettingsMaxFrameSize;     // 5
-
-    long MinWindowSize;
-    long MaxWindowSize;
+    int MinWindowSize;
+    int MaxWindowSize;
 
     int Timeout;
     int TimeoutPoll;
@@ -119,6 +116,9 @@ struct Config
     char UserAgent[128];
     const char *req;
     int (*create_sock)(const char*, const char*, int*);
+
+    std::string RequestsPath;
+    std::string LogPath;
 
     void init()
     {
@@ -143,7 +143,7 @@ struct Stream
 
     ByteArray headers;
     ByteArray frame_win_update;
-    long serv_stream_window_size;
+    int serv_stream_window_size;
     long long recv_bytes;
 
     Stream()
@@ -385,7 +385,7 @@ struct Connect
 
         s[i - 4] = s[i - 4] & 0x7f;
     }
-    
+
     void set_frame_settings()
     {
         char s[32] = "\x00\x00\x00\x04\x00\x00\x00\x00\x00";  // SETTINGS (type=0x4)
@@ -469,7 +469,7 @@ const char *get_str_frame_type(FRAME_TYPE t);
 const char *get_str_setting_param(int n);
 const char *get_http2_error(int err);
 int read_req_file(const char *path);
-void set_id(ByteArray *ba, int d);
+void set_stream_id(ByteArray *ba, int d);
 void set_frame_headers(Connect *conn);
 void add_header(Connect *conn, int ind);
 void add_header(Connect *conn, int ind, const char *val);

@@ -135,7 +135,7 @@ int http2_connection(Connect *con)
                     close_connect(con);
                 return ret;
             }
-//hex_print_stderr(__func__, __LINE__, con->settings.ptr(), con->settings.size());
+
             con->sock_timer = 0;
             if (con->settings.get_byte(4) == 1)
                 con->send_settings_ack = true;
@@ -356,7 +356,7 @@ int recv_frame(Connect *con)
                     {
                         int ind = i * 6;
                         if (con->payload.get_byte(ind + 1) == 3)
-                        {
+                        {// SETTINGS_MAX_CONCURRENT_STREAMS
                             long n = (unsigned char)con->payload.get_byte(ind + 5);
                             n += ((unsigned char)con->payload.get_byte(ind + 4)<<8);
                             n += ((unsigned char)con->payload.get_byte(ind + 3)<<16);
@@ -365,7 +365,7 @@ int recv_frame(Connect *con)
                                 set_max_concurrent_streams(n);
                         }
                         else if (con->payload.get_byte(ind + 1) == 4)
-                        {
+                        {// SETTINGS_INITIAL_WINDOW_SIZE
                             long n = (unsigned char)con->payload.get_byte(ind + 5);
                             n += ((unsigned char)con->payload.get_byte(ind + 4)<<8);
                             n += ((unsigned char)con->payload.get_byte(ind + 3)<<16);
@@ -515,7 +515,7 @@ int send_frame_headers(Connect *c)
     for ( ; c->index_req < c->max_req; )
     {
         int id = c->index_req * 2 + 1;
-        set_id(&c->headers, id); // stream_id
+        set_stream_id(&c->headers, id); // stream_id
         int ret = write_to_client(c, c->headers.ptr(), c->headers.size());
         if (ret <= 0)
         {
@@ -640,7 +640,7 @@ int set_window_update(Connect *c)
                 int ret = set_frame_window_update(r, conf->MaxWindowSize);
                 if (ret < 0)
                 {
-                    fprintf(stderr, "[%lu]<%s:%d> !!! MaxWindowSize=%ld, r->serv_stream_window_size=%ld\n", c->num_conn, __func__, __LINE__, 
+                    fprintf(stderr, "[%lu]<%s:%d> !!! MaxWindowSize=%d, r->serv_stream_window_size=%d\n", c->num_conn, __func__, __LINE__, 
                                     conf->MaxWindowSize , r->serv_stream_window_size);
                 }
             }
@@ -777,82 +777,82 @@ void loop()
 
         num_poll = 0;
         time_t t = time(NULL);
-        Connect *conn = start_list, *next = NULL;
-        for ( int i = 0; conn; conn = next, i++)
+        Connect *con = start_list, *next = NULL;
+        for ( int i = 0; con; con = next, i++)
         {
-            next = conn->next;
+            next = con->next;
 
-            if (conn->sock_timer == 0)
-                conn->sock_timer = t;
-            if ((t - conn->sock_timer) >= conf->Timeout)
+            if (con->sock_timer == 0)
+                con->sock_timer = t;
+            if ((t - con->sock_timer) >= conf->Timeout)
             {
                 fprintf(stderr, "<%s:%d> Timeout=%lld, %s, pend=%d\n", __func__, __LINE__, 
-                        (long long)t - conn->sock_timer, get_str_operation(conn->operation), SSL_pending(conn->ssl));
-                close_connect(conn);
+                        (long long)t - con->sock_timer, get_str_operation(con->operation), SSL_pending(con->ssl));
+                close_connect(con);
                 continue;
             }
 
-            poll_fd[i].fd = conn->servSocket;
-            if (conn->operation == PREFACE_MESSAGE)
+            poll_fd[i].fd = con->servSocket;
+            if (con->operation == PREFACE_MESSAGE)
             {
                 poll_fd[i].events = POLLOUT;
                 num_poll++;
             }
-            else if (conn->operation == CONNECT)
+            else if (con->operation == CONNECT)
             {
-                poll_fd[i].events = conn->events;
+                poll_fd[i].events = con->events;
                 num_poll++;
             }
-            else if (conn->operation == SSL_CONNECT)
+            else if (con->operation == SSL_CONNECT)
             {
-                poll_fd[i].events = conn->events;
+                poll_fd[i].events = con->events;
                 num_poll++;
             }
-            else if (conn->operation == SEND_SETTINGS)
+            else if (con->operation == SEND_SETTINGS)
             {
                 poll_fd[i].events = 0;
-                if (conn->recv_settings_ack == false)
+                if (con->recv_settings_ack == false)
                 {
-                    if (SSL_pending(conn->ssl))
+                    if (SSL_pending(con->ssl))
                     {
-                        conn->revents = POLLIN;
-                        http2_connection(conn);
+                        con->revents = POLLIN;
+                        http2_connection(con);
                     }
                     else
                         poll_fd[i].events |= POLLIN;
                 }
                 
-                if (conn->settings.size())
+                if (con->settings.size())
                     poll_fd[i].events |= POLLOUT;
 
                 num_poll++;
             }
-            else if (conn->operation == WORK_STREAM)
+            else if (con->operation == WORK_STREAM)
             {
                 poll_fd[i].events = 0;
-                if (conn->send_goaway)
+                if (con->send_goaway)
                 {
                     poll_fd[i].events |= POLLOUT;
                 }
                 else
                 {
-                    if (conn->send_headers && (conn->num_work_stream < (int)conf->MaxConcurrentStreams))
+                    if (con->send_headers && (con->num_work_stream < conf->MaxConcurrentStreams))
                     {
                         poll_fd[i].events |= POLLOUT;
                     }
 
-                    if ((conn->serv_connect_window_size < conf->MinWindowSize) && (conn->send_goaway == false))
+                    if ((con->serv_connect_window_size < conf->MinWindowSize) || con->frame_win_update.size())
                     {
-                        if (conn->frame_win_update.size() == 0)
+                        if (con->frame_win_update.size() == 0)
                         {
-                            set_frame_window_update(conn, conf->MaxWindowSize);
+                            set_frame_window_update(con, conf->MaxWindowSize);
                         }
                         poll_fd[i].events = POLLOUT;
                     }
 
-                    for (int j = 0; (j < conn->max_req) && (poll_fd[i].events != POLLOUT); ++j)
+                    for (int j = 0; (j < con->max_req) && (poll_fd[i].events != POLLOUT); ++j)
                     {
-                        Stream *r = conn->req_array[j];
+                        Stream *r = con->req_array[j];
                         if (r)
                         {
                             if (r->serv_stream_window_size < conf->MinWindowSize)
@@ -863,12 +863,12 @@ void loop()
                     }
 
                     int ret = 0, pending = 0;
-                    while ((pending = SSL_pending(conn->ssl)) > 0)
+                    while ((pending = SSL_pending(con->ssl)) > 0)
                     {
-                        if ((ret = recv_frame(conn)) < 0)
+                        if ((ret = recv_frame(con)) < 0)
                         {
                             if (ret == -1)
-                                close_connect(conn);
+                                close_connect(con);
                             break;
                         }
                     }
@@ -901,23 +901,23 @@ void loop()
             continue;
         }
 
-        conn = start_list, next = NULL;
-        for ( int i = 0; conn; conn = next, i++)
+        con = start_list, next = NULL;
+        for ( int i = 0; con; con = next, i++)
         {
-            next = conn->next;
-            conn->revents = poll_fd[i].revents;
+            next = con->next;
+            con->revents = poll_fd[i].revents;
             if (poll_fd[i].revents & (POLLIN | POLLOUT))
             {
-                if ((conn->operation == SSL_CONNECT) ||
-                    (conn->operation == PREFACE_MESSAGE) ||
-                    (conn->operation == SEND_SETTINGS)
+                if ((con->operation == SSL_CONNECT) ||
+                    (con->operation == PREFACE_MESSAGE) ||
+                    (con->operation == SEND_SETTINGS)
                      )
                 {
-                    http2_connection(conn);
+                    http2_connection(con);
                 }
                 else
                 {
-                    worker(conn);
+                    worker(con);
                 }
             }
         }
